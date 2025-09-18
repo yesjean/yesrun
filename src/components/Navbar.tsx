@@ -4,7 +4,7 @@ export default function Navbar() {
   return (
     <nav className="bg-white shadow-md p-4 flex justify-between">
       <Link to="/" className="font-bold text-blue-500">
-        🏃 RunningApp
+        🏃 yesrun
       </Link>
       <div className="space-x-4">
         <Link to="/run">러닝</Link>
