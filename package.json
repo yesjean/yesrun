@@ -10,9 +10,13 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "framer-motion": "^12.23.14",
     "html2canvas": "^1.4.1",
+    "re-resizable": "^6.11.2",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
+    "react-draggable": "^4.5.0",
+    "react-icons": "^5.5.0",
     "react-rnd": "^10.5.2",
     "react-router-dom": "^7.9.1"
   },
@@ -20,10 +24,11 @@
     "@eslint/js": "^9.33.0",
     "@tailwindcss/postcss": "^4.1.13",
     "@types/html2canvas": "^0.5.35",
+    "@types/node": "^24.5.2",
     "@types/react": "^19.1.10",
     "@types/react-dom": "^19.1.7",
     "@types/react-rnd": "^7.4.4",
-    "@vitejs/plugin-react": "^5.0.0",
+    "@vitejs/plugin-react": "^5.0.3",
     "autoprefixer": "^10.4.21",
     "eslint": "^9.33.0",
     "eslint-plugin-react-hooks": "^5.2.0",
@@ -33,6 +38,6 @@
     "tailwindcss": "^4.1.13",
     "typescript": "~5.8.3",
     "typescript-eslint": "^8.39.1",
-    "vite": "^7.1.2"
+    "vite": "^7.1.5"
   }
 }

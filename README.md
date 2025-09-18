@@ -1,69 +1,82 @@
-# React + TypeScript + Vite
+# 🏃 Running Snapshot App
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+러닝 기록을 더 멋지게 남기고 공유할 수 있는 웹/앱 프로젝트입니다.  
+Nike Run Club 같은 러닝 기록 앱에서 **인증샷 생성**, **코스 공유**, **러너 커뮤니티**까지 확장하는 것을 목표로 합니다.  
 
-Currently, two official plugins are available:
+---
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## ✨ 주요 기능
 
-## Expanding the ESLint configuration
+### 📸 인증샷 생성
+- 러닝 기록(거리, 시간, 페이스)을 **사진 위에 오버레이**
+- 드래그 & 리사이즈 가능한 **기록 박스**
+  - 리사이즈 시 폰트 크기 자동 조절
+  - 글자 색상 변경 가능
+  - 배경 불투명 / 투명 전환 가능
+- **사용자 지정 텍스트 박스**
+  - 원하는 텍스트 추가 가능
+  - 드래그 & 리사이즈 지원
+  - 더블클릭 → 텍스트 수정
+  - 글자 색상 / 크기 / 굵기 조절
+- 최종 이미지를 **PNG로 내보내기**
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+---
 
-```js
-export default tseslint.config([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+### 🗺️ 러닝 코스
+- **자동 코스 생성**: 출발지 + 거리 입력 → 추천 코스 생성
+- **지역별 인기 코스**: 다른 러너들이 많이 뛰는 코스 확인
+- **내 코스 만들기**: 직접 코스 등록 가능
+- 코스 상세 정보: 거리, 고도, 예상 소요 시간
 
-      // Remove tseslint.configs.recommended and replace with this
-      ...tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      ...tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      ...tseslint.configs.stylisticTypeChecked,
+---
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+### 👥 러너 커뮤니티
+- 코스 공유: 만든 코스를 다른 사람과 공유
+- 함께 달릴 사람 모집 기능 (당근마켓 느낌의 매칭)
+- 코스별 댓글/후기 작성
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+---
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+### 🏅 러닝 데이터 & 분석
+- **누적 러닝 랭킹**: 지역별 / 친구별 랭킹
+- 러닝 데이터 분석:
+  - 페이스, 케이던스, 심박수 등 패턴 분석
+  - 결과 기반 맞춤형 신발, 보호장비 추천
 
-export default tseslint.config([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+---
+
+### 🎧 러닝 코치 모드
+- 초보 러너용 페이스 가이드
+- 목표별 코칭 (예: 5km 완주, 10km 기록 단축)
+- TTS 음성 안내 (1km마다 알림, 페이스 유지 피드백)
+
+---
+
+## 🛠️ 기술 스택
+
+- **Frontend**: React, TypeScript, Tailwind CSS, Vite
+- **UI Interaction**: react-rnd (드래그/리사이즈), html2canvas (이미지 내보내기)
+- **Backend (예정)**: Node.js, Express, MongoDB
+- **Maps**: Mapbox / Google Maps API (코스 생성 및 시각화)
+
+---
+
+## 📌 향후 계획
+- 모바일 앱 패키징 (React Native / Capacitor)
+- 소셜 로그인 (Google, Apple)
+- 친구 초대 및 팔로우 기능
+- 퍼포먼스 최적화 및 UI 개선
+
+---
+
+## 🚀 실행 방법
+
+```bash
+# 설치
+npm install
+
+# 개발 서버 실행
+npm run dev
+
+# 빌드
+npm run build

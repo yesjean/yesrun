@@ -1,7 +1,10 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
+
 import { useState, useEffect } from "react";
 import html2canvas from "html2canvas";
-import { Rnd } from "react-rnd";
+
+import AppLayout from "../../components/AppLayout";
+import FooterMenu from "../../components/snapshotGenerator/FooterMenu";
+import SnapshotCanvas from "../../components/snapshotGenerator/SnapshotCanvas";
 
 type TextBox = {
   id: number;
@@ -21,15 +24,20 @@ type SelectedBox =
   | null;
 
 export default function SnapshotGenerator() {
-  const [distance] = useState("6.45");
-  const [time] = useState("39:15");
-  const [pace] = useState("6'05''");
+  const [step, setStep] = useState<1 | 2 | 3>(1);
   const [photo, setPhoto] = useState<string | null>(null);
   const [imageSize, setImageSize] = useState({ w: 320, h: 320 });
 
-  const [recordColor, setRecordColor] = useState("#000000");
-  const [bgTransparent, setBgTransparent] = useState(false);
+  // 기록 데이터
+  const [distance] = useState("6.45");
+  const [time] = useState("39:15");
+  const [pace] = useState("6'05''");
 
+  // 기록 박스
+  const [recordColor, setRecordColor] = useState("#ffffff");
+  const [recordBgColor, setRecordBgColor] = useState("#000000");
+  const [recordBgAlpha, setRecordBgAlpha] = useState(0.7);
+  const [recordBgTransparent, setRecordBgTransparent] = useState(false);
   const [recordBox, setRecordBox] = useState({
     x: 0,
     y: 0,
@@ -37,12 +45,17 @@ export default function SnapshotGenerator() {
     height: 150,
   });
 
+  // 텍스트 박스
   const [texts, setTexts] = useState<TextBox[]>([]);
   const [editingId, setEditingId] = useState<number | null>(null);
 
+  // 선택된 박스
   const [selectedBox, setSelectedBox] = useState<SelectedBox>(null);
 
-  // 업로드
+  // 사이드 메뉴 (record | text)
+  const [activeMenu, setActiveMenu] = useState<"record" | "text" | null>(null);
+
+  // 사진 업로드
   const handleUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -50,14 +63,15 @@ export default function SnapshotGenerator() {
     reader.onloadend = () => {
       const img = new Image();
       img.onload = () => {
-        const maxW = 400;
-        const maxH = 400;
+        const maxW = 800;
+        const maxH = 800;
         let w = img.width;
         let h = img.height;
         const ratio = Math.min(maxW / w, maxH / h, 1);
         w = w * ratio;
         h = h * ratio;
         setImageSize({ w, h });
+        setStep(2);
       };
       if (typeof reader.result === "string") {
         img.src = reader.result;
@@ -78,7 +92,7 @@ export default function SnapshotGenerator() {
     link.click();
   };
 
-  // 사진 업로드 시 기록 박스 중앙 배치
+  // 기록 박스 중앙 배치
   useEffect(() => {
     if (photo) {
       setRecordBox((prev) => ({
@@ -89,9 +103,7 @@ export default function SnapshotGenerator() {
     }
   }, [photo, imageSize]);
 
-  const fontSize = Math.min(recordBox.width / 5, recordBox.height / 3);
-
-  // 텍스트 박스 추가 (추가 직후 편집 모드 ON)
+  // 텍스트 박스 추가
   const addTextBox = () => {
     const newId = Date.now();
     const newBox: TextBox = {
@@ -101,13 +113,14 @@ export default function SnapshotGenerator() {
       width: 150,
       height: 50,
       text: "새 텍스트",
-      color: "#000000",
+      color: "#ffffff",
       fontSize: 20,
       bold: false,
     };
     setTexts([...texts, newBox]);
     setEditingId(newId);
     setSelectedBox({ type: "text", id: newId });
+    setActiveMenu("text");
   };
 
   const updateText = (id: number, newProps: Partial<TextBox>) => {
@@ -115,208 +128,109 @@ export default function SnapshotGenerator() {
   };
 
   return (
-    <div className="flex flex-col items-center">
-      <h1 className="text-xl font-bold mb-4">📸 인증샷 생성기</h1>
+    <AppLayout title="">
+      {/* STEP 1 */}
+      {step === 1 && (
+        <div className="flex flex-col items-center justify-center flex-1 w-full px-6 py-10 bg-gradient-to-b from-gray-50 to-gray-100">
+          <h2 className="text-xl font-bold text-gray-800 mb-6">📷 사진을 선택하세요</h2>
+          <label className="flex flex-col items-center justify-center w-48 h-48 bg-white rounded-xl shadow-md border-2 border-dashed border-gray-300 cursor-pointer hover:border-blue-400 transition">
+            <span className="text-gray-500 text-sm">이미지 업로드</span>
+            <input type="file" accept="image/*" onChange={handleUpload} className="hidden" />
+          </label>
+        </div>
+      )}
 
-      {/* 캔버스 */}
-      <div
-        id="snapshot-card"
-        className="relative rounded-xl overflow-hidden shadow-lg bg-gray-300"
-        style={{ width: imageSize.w, height: imageSize.h }}
-        onClick={() => setSelectedBox(null)}
-      >
-        {photo && (
-          <img src={photo} alt="배경" className="w-full h-full object-contain" />
-        )}
-
-        {/* 기록 박스 */}
-        <Rnd
-          size={{ width: recordBox.width, height: recordBox.height }}
-          position={{ x: recordBox.x, y: recordBox.y }}
-          onDragStop={(e, d) =>
-            setRecordBox({ ...recordBox, x: d.x, y: d.y })
-          }
-          onResize={(e, dir, ref, delta, pos) => {
-            setRecordBox({
-              width: parseInt(ref.style.width, 10),
-              height: parseInt(ref.style.height, 10),
-              x: pos.x,
-              y: pos.y,
-            });
-          }}
-          bounds="parent"
-          onClick={(e) => {
-            e.stopPropagation();
-            setSelectedBox({ type: "record" });
-          }}
-          style={{
-            border:
-              selectedBox?.type === "record" ? "1px dashed #4ade80" : "none",
-            backgroundColor: bgTransparent
-              ? "transparent"
-              : "rgba(255,255,255,0.7)",
-          }}
-          enableResizing
-        >
-          <div
-            style={{ color: recordColor }}
-            className="w-full h-full flex flex-col justify-center items-center text-center"
-          >
-            <p
-              style={{
-                fontSize: fontSize * 1.2,
-                fontWeight: "bold",
-                margin: 0,
-                marginBottom: "8px",
-              }}
+      {/* STEP 2 */}
+      {step === 2 && (
+        <div className="flex flex-col items-center w-full h-full bg-gradient-to-b from-gray-50 to-gray-100">
+          {/* 헤더 */}
+          <div className="flex items-center justify-between px-4 py-3 shadow-md bg-white w-full">
+            <button
+              onClick={() => setStep(1)}
+              className="text-gray-600 font-bold hover:text-blue-500 transition"
             >
-              {distance} km
-            </p>
-            <p
-              style={{
-                fontSize: fontSize * 0.6,
-                margin: 0,
-              }}
-            >
-              {time} · {pace}/km
-            </p>
+              ←
+            </button>
+            <h2 className="text-lg font-semibold text-gray-800">기록 선택하기</h2>
+            <div className="w-6" />
           </div>
-        </Rnd>
 
-        {/* 추가 텍스트 박스 */}
-        {texts.map((t) => (
-          <Rnd
-            key={t.id}
-            size={{ width: t.width, height: t.height }}
-            position={{ x: t.x, y: t.y }}
-            onDragStop={(e, d) => updateText(t.id, { x: d.x, y: d.y })}
-            onResize={(e, dir, ref, delta, pos) => {
-              updateText(t.id, {
-                width: parseInt(ref.style.width, 10),
-                height: parseInt(ref.style.height, 10),
-                x: pos.x,
-                y: pos.y,
-                fontSize: Math.min(
-                  parseInt(ref.style.width, 10) / 6,
-                  parseInt(ref.style.height, 10) / 2
-                ),
-              });
-            }}
-            bounds="parent"
-            onClick={(e) => {
-              e.stopPropagation();
-              setSelectedBox({ type: "text", id: t.id });
-            }}
-            style={{
-              border:
-                selectedBox?.type === "text" && selectedBox.id === t.id
-                  ? "1px dashed #4ade80"
-                  : "none",
-            }}
-            enableResizing
-          >
-            <div
-              className="w-full h-full flex items-center justify-center text-center"
-              style={{
-                color: t.color,
-                fontSize: t.fontSize,
-                fontWeight: t.bold ? "bold" : "normal",
-                cursor: "text",
-              }}
-              onDoubleClick={() => setEditingId(t.id)}
-            >
-              {editingId === t.id ? (
-                <input
-                  autoFocus
-                  type="text"
-                  value={t.text}
-                  onChange={(e) => updateText(t.id, { text: e.target.value })}
-                  onBlur={() => setEditingId(null)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") setEditingId(null);
-                  }}
-                  className="w-full text-center bg-transparent outline-none"
-                  style={{
-                    fontSize: t.fontSize,
-                    fontWeight: t.bold ? "bold" : "normal",
-                    color: t.color,
-                  }}
-                />
-              ) : (
-                t.text
-              )}
-            </div>
-          </Rnd>
-        ))}
-      </div>
-
-      {/* 메뉴 */}
-      <div className="mt-4 flex flex-col gap-2 items-center">
-        <input type="file" accept="image/*" onChange={handleUpload} />
-
-        {/* 공통 옵션 */}
-        {selectedBox?.type === "record" && (
-          <div className="flex items-center gap-2">
-            <span>기록 글자 색상:</span>
-            <input
-              type="color"
-              value={recordColor}
-              onChange={(e) => setRecordColor(e.target.value)}
-            />
-          </div>
-        )}
-
-        {selectedBox?.type === "text" &&
-          texts.find((t) => t.id === selectedBox.id) && (
-            <div className="flex gap-2 items-center">
-              <input
-                type="color"
-                value={
-                  texts.find((t) => t.id === selectedBox.id)?.color || "#000000"
-                }
-                onChange={(e) =>
-                  updateText(selectedBox.id, { color: e.target.value })
-                }
-              />
-              <input
-                type="number"
-                value={
-                  texts.find((t) => t.id === selectedBox.id)?.fontSize || 20
-                }
-                onChange={(e) =>
-                  updateText(selectedBox.id, {
-                    fontSize: Number(e.target.value),
-                  })
-                }
-                className="w-16 border px-1"
-              />
+          {/* 콘텐츠 */}
+          <div className="flex flex-col items-center justify-center flex-1 w-full px-6 py-10 space-y-6">
+            <h3 className="text-base text-gray-600">불러올 기록을 선택하세요</h3>
+            <div className="w-full max-w-md p-6 bg-white rounded-xl shadow-md flex flex-col items-center space-y-4">
+              <div className="text-4xl font-bold text-blue-600">{distance} km</div>
+              <div className="flex gap-6 text-gray-700">
+                <div className="flex flex-col items-center">
+                  <span className="text-sm font-medium">⏱ 시간</span>
+                  <span className="text-lg">{time}</span>
+                </div>
+                <div className="flex flex-col items-center">
+                  <span className="text-sm font-medium">⚡ 페이스</span>
+                  <span className="text-lg">{pace}</span>
+                </div>
+              </div>
               <button
-                onClick={() =>
-                  updateText(selectedBox.id, {
-                    bold: !texts.find((t) => t.id === selectedBox.id)?.bold,
-                  })
-                }
-                className="px-2 py-1 border rounded font-bold"
+                className="w-full bg-blue-500 hover:bg-blue-600 text-white py-2 rounded-lg font-semibold transition"
+                onClick={() => setStep(3)}
               >
-                B
+                기록 불러오기
               </button>
             </div>
-          )}
+          </div>
+        </div>
+      )}
 
-        <button
-          onClick={addTextBox}
-          className="bg-blue-500 text-white px-4 py-2 rounded"
-        >
-          + 텍스트 추가
-        </button>
 
-        <button
-          onClick={exportImage}
-          className="bg-green-500 text-white px-4 py-2 rounded mt-2"
-        >
-          내보내기
-        </button>
-      </div>
-    </div>
+      {/* STEP 3 */}
+      {step === 3 && (
+        <div className="flex flex-col h-full w-full bg-gradient-to-b from-gray-50 to-gray-200">
+          {/* 헤더 */}
+          <div className="flex items-center justify-between px-4 py-3 shadow-md bg-white">
+            <button onClick={() => setStep(2)} className="text-gray-600 font-bold">
+              ←
+            </button>
+            <h2 className="text-lg font-semibold">인증샷 편집하기</h2>
+            <div className="w-6" />
+          </div>
+
+          {/* 캔버스 */}
+          <SnapshotCanvas
+            photo={photo}
+            recordBox={recordBox}
+            recordColor={recordColor}
+            recordBgColor={recordBgColor}
+            recordBgAlpha={recordBgAlpha}
+            recordBgTransparent={recordBgTransparent}
+            distance={distance}
+            time={time}
+            pace={pace}
+            texts={texts}
+            editingId={editingId}
+            selectedBox={selectedBox}
+            setEditingId={setEditingId}
+            setSelectedBox={setSelectedBox}
+            setRecordBox={setRecordBox}
+            updateText={updateText}
+            setActiveMenu={setActiveMenu}
+            activeMenu={activeMenu}
+            setRecordBgTransparent={setRecordBgTransparent}
+            setRecordBgColor={setRecordBgColor}
+            setRecordBgAlpha={setRecordBgAlpha}
+            setRecordColor={setRecordColor}
+          />
+
+          {/* 하단 툴바 */}
+          <FooterMenu
+            onRecord={() => setActiveMenu("record")}
+            onAddText={addTextBox}
+            onExport={exportImage}
+          />
+
+          {/* 오른쪽 사이드 메뉴 */}
+
+        </div>
+      )}
+    </AppLayout>
   );
 }

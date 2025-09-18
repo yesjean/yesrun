@@ -2,8 +2,13 @@
   "compilerOptions": {
     "composite": true,
     "module": "ESNext",
-    "moduleResolution": "Node",
-    "allowSyntheticDefaultImports": true
+    "moduleResolution": "bundler",
+    "allowSyntheticDefaultImports": true,
+    "esModuleInterop": true,              // ✅ 추가
+    "resolveJsonModule": true,            // ✅ 추가
+    "skipLibCheck": true,                 // ✅ 추가
+    "jsx": "react-jsx",
+    "types": ["node"]                     // ✅ Node 타입 추가
   },
   "include": ["vite.config.ts"]
 }
