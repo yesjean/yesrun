@@ -8,6 +8,8 @@ import {
   useMapEvents,
 } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
+import SaveCourseButton from "./SaveCourseButton";
+import { Props } from "react-rnd";
 
 type LatLng = [number, number];
 
@@ -44,7 +46,7 @@ function MapClickHandler({ onSelect }: { onSelect: (pos: LatLng) => void }) {
   return null;
 }
 
-export default function OrsMapCourse() {
+export default function OrsMapCourse({ selectedCourse }: Props) {
   const [mode, setMode] = useState<"point" | "loop" | null>(null);
   const [start, setStart] = useState<LatLng | null>(null);
   const [end, setEnd] = useState<LatLng | null>(null);
@@ -57,6 +59,12 @@ export default function OrsMapCourse() {
   const [currentStep, setCurrentStep] = useState(0);
 
   const speechRef = useRef<SpeechSynthesisUtterance | null>(null);
+
+  useEffect(() => {
+    if (selectedCourse && selectedCourse.provider === "ors") {
+      setRoute(selectedCourse.route || []);
+    }
+  }, [selectedCourse]);
 
   // ORS 경로 요청 (일반)
   const fetchRoute = async (from: LatLng, to: LatLng) => {
@@ -105,7 +113,7 @@ export default function OrsMapCourse() {
         },
         body: JSON.stringify({
           coordinates: [[from[1], from[0]]],
-          options: { round_trip: { length: dist * 1000, points: 4 } }, // ✅ 원하는 거리(km) 적용
+          options: { round_trip: { length: dist * 1000, points: 4 } },
           instructions: true,
         }),
       }
@@ -134,14 +142,15 @@ export default function OrsMapCourse() {
         const cur: LatLng = [pos.coords.latitude, pos.coords.longitude];
         setGpsPos(cur);
 
-        // 현재 위치와 가장 가까운 step 업데이트
         if (instructions.length > 0) {
           let nearestStep = 0;
           let minDist = Infinity;
           instructions.forEach((s, idx) => {
-            const [lng, lat] = s.way_points ? route[s.way_points[0]] : [0, 0];
+            const [lng, lat] = s.way_points
+              ? route[s.way_points[0]]
+              : [0, 0];
             const d =
-              Math.abs(lat - cur[0]) + Math.abs(lng - cur[1]); // 단순 거리 비교
+              Math.abs(lat - cur[0]) + Math.abs(lng - cur[1]);
             if (d < minDist) {
               minDist = d;
               nearestStep = idx;
@@ -150,7 +159,6 @@ export default function OrsMapCourse() {
           if (nearestStep !== currentStep) {
             setCurrentStep(nearestStep);
 
-            // TTS 안내
             const text = translateInstruction(
               instructions[nearestStep].instruction
             );
@@ -170,7 +178,6 @@ export default function OrsMapCourse() {
     return () => navigator.geolocation.clearWatch(watchId);
   }, [naviMode, instructions, route, currentStep]);
 
-  // 지도 클릭 → 출발/도착 or 루프
   const handleMapClick = (pos: LatLng) => {
     if (mode === "point") {
       if (!start) {
@@ -193,7 +200,7 @@ export default function OrsMapCourse() {
 
   return (
     <div className="space-y-4">
-      <h2 className="text-lg font-bold">🏃 러닝 코스 생성</h2>
+      <h2 className="text-lg font-bold">🏃 러닝 코스 생성 (ORS)</h2>
 
       {/* 모드 선택 */}
       <div className="flex gap-2">
@@ -220,7 +227,6 @@ export default function OrsMapCourse() {
         </button>
       </div>
 
-      {/* 지도 */}
       <MapContainer
         center={[37.5665, 126.978]}
         zoom={13}
@@ -235,9 +241,11 @@ export default function OrsMapCourse() {
         {end && <Marker position={end} />}
         {gpsPos && naviMode && <Marker position={gpsPos} />}
         {route.length > 0 && <Polyline positions={route} color="blue" />}
+        {selectedCourse?.route?.length && (
+  <Polyline positions={selectedCourse.route} color="blue" />
+)}
       </MapContainer>
 
-      {/* 루프 전용 옵션 */}
       {mode === "loop" && (
         <div className="flex items-center gap-2">
           <label>거리 (km)</label>
@@ -256,9 +264,8 @@ export default function OrsMapCourse() {
         </div>
       )}
 
-      {/* 안내 */}
       {distanceKm && (
-        <p className="text-sm">
+        <p>
           총 거리: <span className="font-bold">{distanceKm.toFixed(2)} km</span>
         </p>
       )}
@@ -278,14 +285,24 @@ export default function OrsMapCourse() {
         </div>
       )}
 
-      {/* 출발/종료 버튼 */}
       {route.length > 0 && (
-        <button
-          onClick={() => setNaviMode((prev) => !prev)}
-          className="w-full py-2 bg-red-500 text-white rounded"
-        >
-          {naviMode ? "⏹ 안내 종료" : "🚀 출발하기 (GPS 추적 시작)"}
-        </button>
+        <div className="space-y-3">
+          <button
+            onClick={() => setNaviMode((prev) => !prev)}
+            className="w-full py-2 bg-red-500 text-white rounded"
+          >
+            {naviMode ? "⏹ 안내 종료" : "🚀 출발하기 (GPS 추적 시작)"}
+          </button>
+          {start && (
+            <SaveCourseButton
+              provider="ors"
+              start={start}
+              end={end}
+              route={route}
+              distanceKm={distanceKm || 0}
+            />
+          )}
+        </div>
       )}
     </div>
   );

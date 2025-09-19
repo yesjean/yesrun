@@ -1,33 +1,55 @@
-import { useParams, useNavigate } from "react-router-dom";
-import { Course } from "./types";
-
-const mockCourses: Course[] = [
-  { id: 1, name: "한강 순환 코스", distance: 5, elevation: 20, estimatedTime: "30:00", type: "recommended" },
-  { id: 2, name: "서울숲 러닝", distance: 8, elevation: 50, estimatedTime: "50:00", type: "popular" },
-  { id: 3, name: "내 동네 언덕길", distance: 4, elevation: 120, estimatedTime: "35:00", type: "my" },
-];
+ 
+import { useParams, Link } from "react-router-dom";
+import { getCourseById } from "./courseStorage";
+import { defaultCourses } from "./DefaultCourses";
+import { MapContainer, TileLayer, Marker, Polyline } from "react-leaflet";
+import "leaflet/dist/leaflet.css";
 
 export default function CourseDetail() {
-  const { id } = useParams();
-  const navigate = useNavigate();
-  const course = mockCourses.find((c) => c.id === Number(id));
+  const { id } = useParams<{ id: string }>();
 
-  if (!course) return <p className="p-4">코스를 찾을 수 없습니다.</p>;
+  // 기본 코스 + 저장 코스에서 찾기
+  const course =
+    defaultCourses.find((c) => c.id === id) || getCourseById(id || "");
+
+  if (!course) {
+    return (
+      <div className="p-4">
+        <p className="text-red-500">해당 코스를 찾을 수 없습니다.</p>
+        <Link to="/course/explore" className="text-blue-500 underline">
+          ← 코스 목록으로 돌아가기
+        </Link>
+      </div>
+    );
+  }
 
   return (
-    <div className="p-4">
-      <button onClick={() => navigate(-1)} className="text-blue-500 mb-4">
-        ← 뒤로가기
-      </button>
-
-      <h2 className="text-xl font-bold mb-2">{course.name}</h2>
-      <p className="text-gray-700 mb-4">
-        거리 {course.distance}km · 고도 {course.elevation}m · 예상 {course.estimatedTime}
+    <div className="p-4 space-y-4">
+      <h2 className="text-2xl font-bold">{course.name}</h2>
+      <p className="text-gray-600">
+        거리: {course.distanceKm.toFixed(2)} km
       </p>
 
-      <div className="w-full h-64 bg-gray-300 rounded flex items-center justify-center">
-        <span className="text-gray-600">지도 API 자리</span>
-      </div>
+      {/* 지도 표시 */}
+      <MapContainer
+        center={course.start}
+        zoom={14}
+        style={{ height: "400px", width: "100%" }}
+      >
+        <TileLayer
+          attribution='&copy; <a href="https://www.openstreetmap.org/">OSM</a>'
+          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+        />
+        <Marker position={course.start} />
+        {course.end && <Marker position={course.end} />}
+        {course.route.length > 0 && (
+          <Polyline positions={course.route} color="blue" />
+        )}
+      </MapContainer>
+
+      <Link to="/course/explore" className="text-blue-500 underline">
+        ← 코스 목록으로
+      </Link>
     </div>
   );
 }

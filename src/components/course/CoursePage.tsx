@@ -1,8 +1,8 @@
 import { useState } from "react";
-import { SavedCourse } from "../../components/course/courseStorage";
-import MapGoogle from "../../components/course/MapGoogle";
-import OrsMapCourse from "../../components/course/OrsMapCourse";
-import SavedCourses from "../../components/course/SavedCourses";
+import SavedCourses from "./SavedCourses";
+import { SavedCourse } from "./courseStorage";
+import OrsMapCourse from "./OrsMapCourse";
+import MapGoogle from "./MapGoogle";
 
 export default function CoursePage() {
   const [selectedCourse, setSelectedCourse] = useState<SavedCourse | null>(null);

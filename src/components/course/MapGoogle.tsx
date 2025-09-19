@@ -1,10 +1,12 @@
-import { useState, useEffect, useRef } from "react";
+import { useEffect, useState } from "react";
 import {
   GoogleMap,
   LoadScript,
   Marker,
   DirectionsRenderer,
 } from "@react-google-maps/api";
+import SaveCourseButton from "./SaveCourseButton";
+import { SavedCourse } from "./courseStorage";
 
 const libraries: ("places" | "geometry")[] = ["places"];
 
@@ -13,36 +15,29 @@ const containerStyle = {
   height: "400px",
 };
 
-// 영어 안내 → 한글 변환
-function translateInstruction(text: string): string {
-  const dict: Record<string, string> = {
-    "Turn right": "오른쪽으로",
-    "Turn left": "왼쪽으로",
-    "Head": "직진",
-    "Continue": "계속 직진",
-    "Arrive": "도착",
-    "Destination": "목적지",
-    "Slight right": "우회전",
-    "Slight left": "좌회전",
-  };
-  let result = text;
-  Object.keys(dict).forEach((k) => {
-    if (result.includes(k)) result = result.replace(k, dict[k]);
-  });
-  return result;
-}
-
-export default function MapGoogle() {
+export default function MapGoogle({
+  selectedCourse,
+}: {
+  selectedCourse?: SavedCourse | null;
+}) {
   const [start, setStart] = useState<google.maps.LatLngLiteral | null>(null);
   const [end, setEnd] = useState<google.maps.LatLngLiteral | null>(null);
-  const [directions, setDirections] = useState<google.maps.DirectionsResult | null>(null);
+  const [directions, setDirections] =
+    useState<google.maps.DirectionsResult | null>(null);
 
-  const [naviMode, setNaviMode] = useState(false);
-  const [gpsPos, setGpsPos] = useState<google.maps.LatLngLiteral | null>(null);
-  const [steps, setSteps] = useState<google.maps.DirectionsStep[]>([]);
-  const [currentStep, setCurrentStep] = useState(0);
-
-  const speechRef = useRef<SpeechSynthesisUtterance | null>(null);
+  // ✅ 선택된 코스가 Google일 경우 지도에 표시
+  useEffect(() => {
+    if (selectedCourse?.provider === "google" && selectedCourse.googleDirections) {
+      setStart({
+        lat: selectedCourse.start[0],
+        lng: selectedCourse.start[1],
+      });
+      if (selectedCourse.end) {
+        setEnd({ lat: selectedCourse.end[0], lng: selectedCourse.end[1] });
+      }
+      setDirections(selectedCourse.googleDirections);
+    }
+  }, [selectedCourse]);
 
   const handleClick = (e: google.maps.MapMouseEvent) => {
     if (!e.latLng) return;
@@ -57,7 +52,6 @@ export default function MapGoogle() {
       setStart(pos);
       setEnd(null);
       setDirections(null);
-      setSteps([]);
     }
   };
 
@@ -70,12 +64,11 @@ export default function MapGoogle() {
       {
         origin,
         destination,
-        travelMode: google.maps.TravelMode.WALKING, // 🚶 보행자
+        travelMode: google.maps.TravelMode.WALKING,
       },
       (result, status) => {
         if (status === "OK" && result) {
           setDirections(result);
-          setSteps(result.routes[0].legs[0].steps);
         } else {
           console.error("경로 생성 실패:", status);
         }
@@ -83,93 +76,48 @@ export default function MapGoogle() {
     );
   };
 
-  // GPS 추적 + 턴 안내
-  useEffect(() => {
-    if (!naviMode) return;
-    const watchId = navigator.geolocation.watchPosition(
-      (pos) => {
-        const cur = { lat: pos.coords.latitude, lng: pos.coords.longitude };
-        setGpsPos(cur);
-
-        if (steps.length > 0) {
-          // 간단: 내 위치와 각 step 끝점 거리 비교 → 가장 가까운 step 찾기
-          let nearest = 0;
-          let minDist = Infinity;
-          steps.forEach((s, i) => {
-            const endLoc = s.end_location;
-            const d =
-              Math.abs(endLoc.lat() - cur.lat) +
-              Math.abs(endLoc.lng() - cur.lng);
-            if (d < minDist) {
-              minDist = d;
-              nearest = i;
-            }
-          });
-
-          if (nearest !== currentStep) {
-            setCurrentStep(nearest);
-
-            const text = translateInstruction(steps[nearest].instructions);
-            if (text) {
-              if (speechRef.current) speechSynthesis.cancel();
-              const utter = new SpeechSynthesisUtterance(text);
-              utter.lang = "ko-KR";
-              speechRef.current = utter;
-              speechSynthesis.speak(utter);
-            }
-          }
-        }
-      },
-      (err) => console.error(err),
-      { enableHighAccuracy: true }
-    );
-    return () => navigator.geolocation.clearWatch(watchId);
-  }, [naviMode, steps, currentStep]);
+  // 변환 유틸: LatLngLiteral → [number, number]
+  const toTuple = (pos: google.maps.LatLngLiteral): [number, number] => [
+    pos.lat,
+    pos.lng,
+  ];
 
   return (
-    <div className="space-y-4">
-      <h2 className="text-lg font-bold">🌍 구글맵 러닝 네비</h2>
-
-      <LoadScript
-        googleMapsApiKey={import.meta.env.VITE_GOOGLE_MAPS_API_KEY}
-        libraries={libraries}
+    <LoadScript
+      googleMapsApiKey={import.meta.env.VITE_GOOGLE_MAPS_API_KEY}
+      libraries={libraries}
+    >
+      <GoogleMap
+        mapContainerStyle={containerStyle}
+        center={start || { lat: 37.5665, lng: 126.978 }}
+        zoom={14}
+        onClick={handleClick}
       >
-        <GoogleMap
-          mapContainerStyle={containerStyle}
-          center={start || { lat: 37.5665, lng: 126.978 }}
-          zoom={14}
-          onClick={handleClick}
-        >
-          {start && <Marker position={start} />}
-          {end && <Marker position={end} />}
-          {gpsPos && naviMode && <Marker position={gpsPos} />}
-          {directions && <DirectionsRenderer directions={directions} />}
-        </GoogleMap>
-      </LoadScript>
+        {start && <Marker position={start} />}
+        {end && <Marker position={end} />}
+        {directions && <DirectionsRenderer directions={directions} />}
+      </GoogleMap>
 
-      {steps.length > 0 && (
-        <div className="p-3 bg-gray-100 rounded max-h-48 overflow-y-auto">
-          <h3 className="font-semibold mb-2">경로 안내</h3>
-          {steps.map((s, i) => (
-            <p
-              key={i}
-              className={i === currentStep ? "text-blue-600 font-bold" : ""}
-              dangerouslySetInnerHTML={{
-                __html: "👉 " + translateInstruction(s.instructions),
-              }}
-            />
-          ))}
+      {directions && start && (
+        <div className="mt-4">
+          <SaveCourseButton
+            provider="google"
+            start={toTuple(start)} // ✅ 변환해서 넘김
+            end={end ? toTuple(end) : null}
+            route={
+              directions.routes[0].overview_path.map((p) => [
+                p.lat(),
+                p.lng(),
+              ]) as [number, number][]
+            }
+            distanceKm={
+              directions.routes[0].legs[0].distance?.value
+                ? directions.routes[0].legs[0].distance.value / 1000
+                : 0
+            }
+          />
         </div>
       )}
-
-      {directions && (
-        <button
-          onClick={() => setNaviMode((prev) => !prev)}
-          className="w-full py-2 bg-red-500 text-white rounded"
-        >
-          {naviMode ? "⏹ 안내 종료" : "🚀 출발하기 (GPS 추적 시작)"}
-        </button>
-      )}
-    </div>
+    </LoadScript>
   );
 }

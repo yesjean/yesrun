@@ -1,12 +1,11 @@
-export type Course = {
-  id: number;
+export interface Course {
+  id: string;
   name: string;
-  distance: number; // km
-  elevation: number; // m
-  estimatedTime: string; // "39:15"
-  type: "recommended" | "popular" | "my";
+  distance: number;
   start: [number, number];
   end: [number, number];
-  route?: [number, number][]; // polyline 좌표들
-  createdAt?: string;
-};
+  route: [number, number][];
+  createdAt: string;
+  type: "loop" | "point";
+  provider: "google" | "ors"; // 어디서 만든 코스인지
+}

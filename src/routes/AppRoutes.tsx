@@ -8,6 +8,9 @@ import RankingDashboard from "../pages/Ranking/RankingDashboard";
 import GearDashboard from "../pages/Gear/GearDashboard";
 import UserProfile from "../pages/UserProfile";
 import CoursePage from "../pages/Course";
+import CourseExplore from "../components/course/CourseExplore";
+import CourseMaker from "../components/course/CourseMakerPage";
+import CourseDetail from "../components/course/CourseDetail";
 
 export default function AppRoutes() {
   return (
@@ -20,7 +23,10 @@ export default function AppRoutes() {
       <Route path="/ranking" element={<RankingDashboard />} />
       <Route path="/gear" element={<GearDashboard />} />
       <Route path="/profile" element={<UserProfile />} />
-       <Route path="/course/*" element={<CoursePage />} />
+       <Route path="/course/create" element={<CoursePage />} />
+       <Route path="/course/explore" element={<CourseExplore />} />
+       <Route path="/course/maker" element={<CourseMaker />} />
+       <Route path="/course/:id" element={<CourseDetail />} />
     </Routes>
   );
 }
