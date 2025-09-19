@@ -7,7 +7,7 @@ export default function Navbar() {
         🏃 yesrun
       </Link>
       <div className="space-x-4">
-        <Link to="/run">러닝</Link>
+        <Link to="/record">러닝</Link>
         <Link to="/course/explore">코스</Link>
         <Link to="/snapshot">인증샷</Link>
         <Link to="/ranking">랭킹</Link>
