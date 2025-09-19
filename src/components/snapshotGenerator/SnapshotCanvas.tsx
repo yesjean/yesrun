@@ -144,12 +144,12 @@ export default function SnapshotCanvas({
           bounds="parent"
           onClick={(e: any) => {
             e.stopPropagation();
-            setSelectedBox({ type: "text", id: t.id });
+            setSelectedBox({ type: "text", id: t?.id});
             setActiveMenu("text");
           }}
           style={{
             border:
-              selectedBox?.type === "text" && selectedBox.id === t.id
+              selectedBox?.type === "text" && selectedBox?.id=== t.id
                 ? "1px dashed #4ade80"
                 : "none",
           }}
@@ -165,7 +165,7 @@ export default function SnapshotCanvas({
             }}
             onDoubleClick={() => setEditingId(t.id)}
           >
-            {editingId === t.id ? (
+            {editingId === t?.id? (
               <input
                 autoFocus
                 type="text"

@@ -5,15 +5,22 @@ import { defaultCourses } from "./DefaultCourses";
 
 export default function CourseExplore() {
   const [saved, setSaved] = useState<SavedCourse[]>([]);
+  const [loading, setLoading] = useState(true);
 
+  // 저장된 코스 불러오기
   useEffect(() => {
-    setSaved(getSavedCourses());
+    (async () => {
+      const data = await getSavedCourses();
+      setSaved(data);
+      setLoading(false);
+    })();
   }, []);
 
-  const handleDelete = (id: string) => {
+  const handleDelete = async (id: string) => {
     if (confirm("이 코스를 삭제할까요?")) {
-      deleteCourse(id);
-      setSaved(getSavedCourses()); // 🔄 다시 불러오기
+      await deleteCourse(id);
+      const data = await getSavedCourses(); // 🔄 다시 불러오기
+      setSaved(data);
     }
   };
 
@@ -45,7 +52,9 @@ export default function CourseExplore() {
         <h2 className="text-2xl font-bold mb-4 flex items-center gap-2">
           📂 내가 만든 코스
         </h2>
-        {saved.length === 0 ? (
+        {loading ? (
+          <p className="text-gray-400">⏳ 불러오는 중...</p>
+        ) : saved.length === 0 ? (
           <p className="text-gray-500 italic">저장된 코스가 없습니다.</p>
         ) : (
           <div className="grid gap-4 md:grid-cols-2">
@@ -71,7 +80,7 @@ export default function CourseExplore() {
                   onClick={() => handleDelete(c.id)}
                   className="mt-3 px-3 py-1 bg-gray-500 text-white text-sm rounded hover:bg-gray-600 self-end"
                 >
-                  X
+                  삭제
                 </button>
               </div>
             ))}

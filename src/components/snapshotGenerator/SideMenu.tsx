@@ -86,14 +86,14 @@ export default function SideMenu({
           {/* 텍스트 메뉴 */}
           {activeMenu === "text" &&
             selectedBox?.type === "text" &&
-            texts.find((t: any) => t.id === selectedBox.id) && (
+            texts.find((t: any) => t?.id=== selectedBox.id) && (
               <div className="space-y-4">
                 <label className="flex items-center gap-2">
                   <MdFormatColorText /> 글자 색상
                   <input
                     type="color"
                     value={
-                      texts.find((t: any) => t.id === selectedBox.id)?.color ||
+                      texts.find((t: any) => t?.id=== selectedBox.id)?.color ||
                       "#000000"
                     }
                     onChange={(e) =>
@@ -107,7 +107,7 @@ export default function SideMenu({
                   <input
                     type="number"
                     value={
-                      texts.find((t: any) => t.id === selectedBox.id)?.fontSize ||
+                      texts.find((t: any) => t?.id=== selectedBox.id)?.fontSize ||
                       20
                     }
                     onChange={(e) =>
@@ -123,7 +123,7 @@ export default function SideMenu({
                   onClick={() =>
                     updateText(selectedBox.id, {
                       bold:
-                        !texts.find((t: any) => t.id === selectedBox.id)?.bold,
+                        !texts.find((t: any) => t?.id=== selectedBox.id)?.bold,
                     })
                   }
                   className="px-2 py-1 border rounded font-bold"

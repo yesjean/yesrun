@@ -124,7 +124,7 @@ export default function SnapshotGenerator() {
   };
 
   const updateText = (id: number, newProps: Partial<TextBox>) => {
-    setTexts(texts.map((t) => (t.id === id ? { ...t, ...newProps } : t)));
+    setTexts(texts.map((t) => (t?.id=== id ? { ...t, ...newProps } : t)));
   };
 
   return (

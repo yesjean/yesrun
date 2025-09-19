@@ -59,7 +59,7 @@ export default function OptionPanel({
 
             {activeMenu === "text" &&
                 selectedBox?.type === "text" &&
-                texts.find((t) => t.id === selectedBox.id) && (
+                texts.find((t) => t?.id=== selectedBox.id) && (
                     <motion.div
                         initial={{ y: "100%" }}
                         animate={{ y: 0 }}

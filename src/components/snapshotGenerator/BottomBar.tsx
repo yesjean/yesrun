@@ -86,7 +86,7 @@ export default function BottomBar({
               )}
               {activeMenu === "text" &&
                 selectedBox?.type === "text" &&
-                texts.find((t) => t.id === selectedBox.id) && (
+                texts.find((t) => t?.id=== selectedBox.id) && (
                   <TextOptions
                     selectedBox={selectedBox}
                     texts={texts}

@@ -20,7 +20,7 @@ export default function RunRecordDetail() {
 
   useEffect(() => {
     const saved = JSON.parse(localStorage.getItem("runs") || "[]") as RunRecord[];
-    const found = saved.find((r) => r.id === id);
+    const found = saved.find((r) => r?.id=== id);
     setRecord(found || null);
   }, [id]);
 

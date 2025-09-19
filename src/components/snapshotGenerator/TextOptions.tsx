@@ -16,7 +16,7 @@ type Props = {
 };
 
 export default function TextOptions({ selectedBox, texts, updateText }: Props) {
-  const target = texts.find((t) => t.id === selectedBox.id);
+  const target = texts.find((t) => t?.id=== selectedBox.id);
   if (!target) return null;
 
   return (
